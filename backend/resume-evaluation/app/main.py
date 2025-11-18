@@ -8,6 +8,7 @@ from .database import create_db_and_tables
 from .config import settings
 from .middleware.auth_middleware import AuthMiddleware, RateLimitMiddleware
 from .utils.redis_client import redis_client
+from .utils.qdrant_client import qdrant_client
 from .routes.auth_routes import router as auth_router
 from .routes.user_routes import router as user_router
 from .routes.job_routes import router as job_router
@@ -42,6 +43,17 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print("Redis initialization failed:", e)
         # Continue without Redis (graceful degradation)
+
+    try:
+        await qdrant_client.connect()
+        qdrant_healthy = qdrant_client.health_check()
+        if qdrant_healthy:
+            print("Qdrant connected successfully.")
+        else:
+            print("Warning: Qdrant health check failed.")
+    except Exception as e:
+        print("Qdrant initialization failed:", e)
+        # Continue without Qdrant (graceful degradation)
 
     yield
 

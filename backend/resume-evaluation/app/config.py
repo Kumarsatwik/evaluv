@@ -1,10 +1,11 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
 
 
 class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://postgres:root@localhost/evaluv"
-
+    ENVIRONMENT: str = "development"  # "development" or "production"
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
     REDIS_MAX_CONNECTIONS: int = 10
@@ -26,6 +27,21 @@ class Settings(BaseSettings):
     # Caching
     CACHE_TTL_SECONDS: int = 300  # 5 minutes default cache TTL
     ENABLE_CACHING: bool = True
+
+    # Qdrant Vector Database
+    QDRANT_URL: str = "http://localhost:6333"
+    QDRANT_API_KEY: Optional[str] = None
+    QDRANT_COLLECTION_PREFIX: str = "resume_eval"
+    QDRANT_VECTOR_SIZE: int = 1536  # Default for OpenAI text-embedding-ada-002
+    QDRANT_DISTANCE_METRIC: str = "Cosine"
+    QDRANT_ENABLE_HNSW: bool = True
+
+    # Embeddings
+    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-ada-002"
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_EMBEDDING_MODEL: str = "qwen3-embedding:0.6b"
+    EMBEDDING_MAX_TOKENS: int = 8191  # Maximum tokens for embeddings
 
     model_config = SettingsConfigDict(env_file=".env")
 
