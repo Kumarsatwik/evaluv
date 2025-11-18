@@ -3,8 +3,11 @@ from sqlmodel import select
 from typing import Optional, List
 from uuid import UUID
 from ..models.job import Job
-from ..schemas.job import JobCreateRequest, JobUpdateRequest
+from ..schemas.job import JobCreateRequest, JobUpdateRequest, JobResponse
 from ..utils.exceptions import NotFoundException
+from ..utils.redis_client import redis_client
+from ..config import settings
+import json
 
 
 class JobService:
@@ -23,13 +26,34 @@ class JobService:
         result = await self.session.exec(statement)
         return list(result.all())
 
-    async def get_all_jobs(self) -> List[Job]:
-        """Get all jobs"""
+    async def get_all_jobs(self) -> List[JobResponse]:
+        """Get all jobs with optional caching"""
+        cached_data = await redis_client.cache_get("jobs:all")
+        if cached_data:
+            try:
+                jobs_data = json.loads(cached_data)
+                return [JobResponse(**job_data) for job_data in jobs_data]
+            except json.JSONDecodeError:
+                pass  # Fall back to database
+
+        # Get from database
+        jobs = await self._get_all_jobs_from_db()
+
+        # Cache results
+        if jobs:
+            jobs_data = [job.model_dump() for job in jobs]
+            await redis_client.cache_set("jobs:all", json.dumps(jobs_data), settings.CACHE_TTL_SECONDS)
+
+        return jobs
+
+    async def _get_all_jobs_from_db(self) -> List[JobResponse]:
+        """Get all jobs from database"""
         statement = select(Job)
         result = await self.session.exec(statement)
-        return list(result.all())
+        jobs = list(result.all())
+        return [JobResponse.model_validate(job) for job in jobs]
 
-    async def create_job(self, job_create: JobCreateRequest, created_by: UUID) -> Job:
+    async def create_job(self, job_create: JobCreateRequest, created_by: UUID) -> JobResponse:
         """Create a new job"""
         data = job_create.model_dump()
         data['created_by'] = created_by
@@ -37,9 +61,13 @@ class JobService:
         self.session.add(db_job)
         await self.session.commit()
         await self.session.refresh(db_job)
-        return db_job
 
-    async def update_job(self, job_id: UUID, job_update: JobUpdateRequest, created_by: UUID) -> Optional[Job]:
+        # Invalidate cache
+        await redis_client.cache_delete("jobs:all")
+
+        return JobResponse.model_validate(db_job)
+
+    async def update_job(self, job_id: UUID, job_update: JobUpdateRequest, created_by: UUID) -> Optional[JobResponse]:
         """Update job information (only by creator)"""
         db_job = await self.get_job_by_id(job_id)
         if not db_job or str(db_job.created_by) != str(created_by):
@@ -51,7 +79,11 @@ class JobService:
 
         await self.session.commit()
         await self.session.refresh(db_job)
-        return db_job
+
+        # Invalidate cache
+        await redis_client.cache_delete("jobs:all")
+
+        return JobResponse.model_validate(db_job)
 
     async def delete_job(self, job_id: UUID, created_by: UUID) -> bool:
         """Delete job (only by creator or admin)"""
@@ -61,4 +93,8 @@ class JobService:
 
         await self.session.delete(db_job)
         await self.session.commit()
+
+        # Invalidate cache
+        await redis_client.cache_delete("jobs:all")
+
         return True

@@ -23,6 +23,7 @@ dependencies = [
     "sqlmodel==0.0.16",
     "uvicorn==0.24.0",
     "psycopg2>=2.9.11",
+    "redis>=7.0.1",
 ]
 
 [tool.pytest.ini_options]

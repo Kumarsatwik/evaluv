@@ -24,7 +24,7 @@ class JobController:
 
         created_by = UUID(request.state.user["id"])
         job = await self.job_service.create_job(job_create, created_by)
-        return JobResponse.model_validate(job)
+        return job
 
     async def get_job_by_id(self, job_id: UUID, request: Request) -> JobResponse:
         """Get job by ID"""
@@ -49,7 +49,7 @@ class JobController:
     async def get_all_jobs(self, request: Request) -> List[JobResponse]:
         """Get all jobs (for evaluation purposes)"""
         jobs = await self.job_service.get_all_jobs()
-        return [JobResponse.model_validate(job) for job in jobs]
+        return jobs
 
     async def update_job(self, job_id: UUID, job_update: JobUpdateRequest, request: Request) -> JobResponse:
         """Update job (only by creator)"""
@@ -64,7 +64,7 @@ class JobController:
         if not job:
             raise NotFoundException("Job not found or access denied")
 
-        return JobResponse.model_validate(job)
+        return job
 
     async def delete_job(self, job_id: UUID, request: Request) -> dict:
         """Delete job (only by creator)"""

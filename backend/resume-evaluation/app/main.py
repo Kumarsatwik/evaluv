@@ -7,6 +7,7 @@ from slowapi.errors import RateLimitExceeded
 from .database import create_db_and_tables
 from .config import settings
 from .middleware.auth_middleware import AuthMiddleware, RateLimitMiddleware
+from .utils.redis_client import redis_client
 from .routes.auth_routes import router as auth_router
 from .routes.user_routes import router as user_router
 from .routes.job_routes import router as job_router
@@ -23,14 +24,33 @@ limiter = Limiter(key_func=get_remote_address)
 # ------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Startup
     try:
         await create_db_and_tables()
         print("Database initialized successfully.")
     except Exception as e:
         print("Database initialization failed:", e)
         raise e
+
+    try:
+        await redis_client.connect()
+        redis_connected = await redis_client.ping()
+        if redis_connected:
+            print("Redis connected successfully.")
+        else:
+            print("Warning: Redis connection test failed.")
+    except Exception as e:
+        print("Redis initialization failed:", e)
+        # Continue without Redis (graceful degradation)
+
     yield
-    # Place for shutdown tasks if needed
+
+    # Shutdown
+    try:
+        await redis_client.disconnect()
+        print("Redis disconnected successfully.")
+    except Exception as e:
+        print("Redis disconnection error:", e)
 
 
 # ------------------------------------------
