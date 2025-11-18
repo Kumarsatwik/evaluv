@@ -1,5 +1,6 @@
-from sqlmodel import SQLModel, Field, Column
-from typing import Optional
+from sqlmodel import SQLModel, Field, Column, Relationship
+from typing import Optional, List
+
 from datetime import datetime, timezone
 import uuid
 import sqlalchemy as sa
@@ -20,10 +21,10 @@ class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str = Field(sa_column=Column("hashed_password", sa.String, nullable=False))
     created_at: datetime = Field(sa_column=Column(sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)))
-    updated_at: datetime = Field(sa_column=Column(sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)))
+    updated_at: datetime = Field(sa_column=Column(sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc)))
     
-    # Relationships can be added here if needed
-    # posts: List["Post"] = Relationship(back_populates="author")
+    # Relationships
+    jobs: List["Job"] = Relationship(back_populates="creator")
 
 
 class UserCreate(UserBase):

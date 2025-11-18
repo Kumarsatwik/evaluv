@@ -1,14 +1,13 @@
-from sqlmodel import create_engine, SQLModel
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlmodel import SQLModel
+from sqlalchemy.ext.asyncio import  create_async_engine
 from typing import AsyncGenerator
-from contextlib import asynccontextmanager
 from .config import settings
 
 
 # Create async engine
 async_engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=False,  # Disabled SQL query logging
+    echo=False,  
     pool_pre_ping=True,
     pool_size=20,
     max_overflow=30

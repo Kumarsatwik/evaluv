@@ -9,6 +9,7 @@ from .config import settings
 from .middleware.auth_middleware import AuthMiddleware, RateLimitMiddleware
 from .routes.auth_routes import router as auth_router
 from .routes.user_routes import router as user_router
+from .routes.job_routes import router as job_router
 from datetime import datetime, timezone
 
 # ------------------------------------------
@@ -18,7 +19,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 # ------------------------------------------
-# Lifespan (recommended over deprecated startup events)
+# Lifespan
 # ------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -81,6 +82,7 @@ app.add_middleware(RateLimitMiddleware)
 # ------------------------------------------
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(job_router)
 
 
 # ------------------------------------------

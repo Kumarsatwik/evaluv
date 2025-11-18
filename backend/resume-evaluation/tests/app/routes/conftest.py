@@ -1,13 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
-from fastapi import Request, HTTPException
+from fastapi import Request
 from unittest.mock import AsyncMock, MagicMock
-import asyncio
-import json
 from app.routes.auth_routes import router as auth_router
 from app.routes.user_routes import router as user_router
+from app.routes.job_routes import router as job_router
 from app.controllers.auth_controller import AuthController
 from app.controllers.user_controller import UserController
+from app.controllers.job_controller import JobController
 from fastapi import FastAPI
 from app.schemas.user import UserResponse
 from uuid import uuid4
@@ -63,6 +63,20 @@ def mock_user_controller():
 
 
 @pytest.fixture
+def mock_job_controller():
+    """Mock JobController for testing"""
+    controller = MagicMock(spec=JobController)
+    # Set up async mocks
+    controller.create_job = AsyncMock()
+    controller.get_job_by_id = AsyncMock()
+    controller.get_my_jobs = AsyncMock()
+    controller.get_all_jobs = AsyncMock()
+    controller.update_job = AsyncMock()
+    controller.delete_job = AsyncMock()
+    return controller
+
+
+@pytest.fixture
 def test_app(mock_auth_controller, mock_user_controller):
     """Create test FastAPI app with test middleware and overridden dependencies"""
     from app.routes.auth_routes import get_auth_controller
@@ -81,9 +95,36 @@ def test_app(mock_auth_controller, mock_user_controller):
 
 
 @pytest.fixture
+def test_app_jobs(mock_auth_controller, mock_user_controller, mock_job_controller):
+    """Create test FastAPI app with job routes and test middleware"""
+    from app.routes.auth_routes import get_auth_controller
+    from app.routes.user_routes import get_user_controller
+    from app.routes.job_routes import get_job_controller
+
+    app = FastAPI()
+    app.add_middleware(TestAuthMiddleware)
+    app.include_router(auth_router)
+    app.include_router(user_router)
+    app.include_router(job_router)
+
+    # Override dependencies
+    app.dependency_overrides[get_auth_controller] = lambda: mock_auth_controller
+    app.dependency_overrides[get_user_controller] = lambda: mock_user_controller
+    app.dependency_overrides[get_job_controller] = lambda: mock_job_controller
+
+    return app
+
+
+@pytest.fixture
 def client(test_app):
     """Test client for making requests"""
     return TestClient(test_app)
+
+
+@pytest.fixture
+def client_jobs(test_app_jobs):
+    """Test client for job route requests"""
+    return TestClient(test_app_jobs)
 
 
 @pytest.fixture

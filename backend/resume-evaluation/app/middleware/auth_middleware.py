@@ -1,7 +1,7 @@
-from fastapi import Request, HTTPException, status
+from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from typing import Callable, Optional
+from typing import Callable
 import time
 from ..utils.security import verify_token
 from ..services.auth_service import AuthService

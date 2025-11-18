@@ -1,7 +1,6 @@
 from fastapi import HTTPException, status, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 from datetime import datetime
-from ..database import get_async_session
 from ..services.user_services import UserService
 from ..services.auth_service import AuthService
 from ..schemas.user import (

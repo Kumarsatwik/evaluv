@@ -29,3 +29,8 @@ dependencies = [
 pythonpath = "."
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+
+filterwarnings = [
+    "ignore::DeprecationWarning:passlib.utils",
+    "ignore::pydantic._internal._config.PydanticDeprecatedSince20",
+]
