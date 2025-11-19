@@ -32,15 +32,18 @@ class Settings(BaseSettings):
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_API_KEY: Optional[str] = None
     QDRANT_COLLECTION_PREFIX: str = "resume_eval"
-    QDRANT_VECTOR_SIZE: int = 1536  # Default for OpenAI text-embedding-ada-002
+    QDRANT_VECTOR_SIZE: int = 4096  # Updated for qwen/qwen3-embedding-8b
     QDRANT_DISTANCE_METRIC: str = "Cosine"
     QDRANT_ENABLE_HNSW: bool = True
 
     # Embeddings
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_EMBEDDING_MODEL: str = "text-embedding-ada-002"
+    OPENROUTER_API_KEY: Optional[str] = None
+    EMBEDDING_MODEL: str = "qwen/qwen3-embedding-8b"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_EMBEDDING_MODEL: str = "qwen3-embedding:0.6b"
+
     EMBEDDING_MAX_TOKENS: int = 8191  # Maximum tokens for embeddings
 
     model_config = SettingsConfigDict(env_file=".env")

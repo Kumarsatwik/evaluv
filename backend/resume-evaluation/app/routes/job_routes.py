@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List
-
+from fastapi import BackgroundTasks
 from ..database import get_async_session
 from ..controllers.job_controller import JobController
 from ..schemas.job import JobResponse, JobCreateRequest, JobUpdateRequest
@@ -19,10 +19,11 @@ router = APIRouter(prefix="/jobs", tags=["Jobs"])
 async def create_job(
     job: JobCreateRequest,
     request: Request,
+    background_tasks: BackgroundTasks,
     controller: JobController = Depends(get_job_controller)
 ):
     """Create a new job"""
-    return await controller.create_job(job, request)
+    return await controller.create_job(job, request, background_tasks)
 
 @router.get("/{job_id}", response_model=JobResponse)
 async def get_job_by_id(
@@ -54,16 +55,18 @@ async def update_job(
     job_id: UUID,
     job: JobUpdateRequest,
     request: Request,
+    background_tasks: BackgroundTasks,
     controller: JobController = Depends(get_job_controller)
 ):
     """Update job"""
-    return await controller.update_job(job_id, job, request)
+    return await controller.update_job(job_id, job, request, background_tasks)
 
 @router.delete("/{job_id}")
 async def delete_job(
     job_id: UUID,
     request: Request,
+    background_tasks: BackgroundTasks,  
     controller: JobController = Depends(get_job_controller)
 ):
     """Delete job"""
-    return await controller.delete_job(job_id, request)
+    return await controller.delete_job(job_id, request, background_tasks)

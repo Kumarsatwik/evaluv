@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer
+from fastapi.openapi.utils import get_openapi
 from contextlib import asynccontextmanager
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -74,9 +76,40 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# ------------------------------------------
+# OpenAPI Security Configuration
+# ------------------------------------------
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+        tags=app.openapi_tags,
+        servers=app.servers,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT"
+        }
+    }
+    openapi_schema["security"] = [
+        {"BearerAuth": []}
+    ]
+    app.openapi_schema = openapi_schema
+    return openapi_schema
+
+app.openapi = custom_openapi
+
 @app.on_event("startup")
 async def startup_event():
-    await create_db_and_tables()
+    # await create_db_and_tables()
+    pass
 
 @app.on_event("shutdown")
 async def shutdown_event():

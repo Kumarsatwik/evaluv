@@ -36,6 +36,9 @@ class JobResponse(BaseModel):
     salary_range: Optional[str]
     job_type: str
     status: str
+    embedding_status: str
+    qdrant_point_id: Optional[str]
+    error_message: Optional[str]
     created_at: datetime
     updated_at: datetime
     created_by: uuid.UUID

@@ -53,22 +53,33 @@ class QdrantVectorClient:
             collections = self.client.get_collections()
             collection_names = [c.name for c in collections.collections]
 
-            if collection_name not in collection_names:
-                self.client.create_collection(
-                    collection_name=collection_name,
-                    vectors_config=models.VectorParams(
-                        size=settings.QDRANT_VECTOR_SIZE,
-                        distance=models.Distance.COSINE if settings.QDRANT_DISTANCE_METRIC == "Cosine"
-                               else models.Distance.EUCLID,
-                    ),
-                    hnsw_config=models.HnswConfig_DIFF(
-                        m=16,
-                        ef_construct=100,
-                        full_scan_threshold=10000,
-                        max_indexing_threads=0,
-                    ) if settings.QDRANT_ENABLE_HNSW else None,
-                )
-                print(f"Created job collection: {collection_name}")
+            if collection_name in collection_names:
+                # Check vector size
+                info = self.client.get_collection(collection_name)
+                current_size = info.config.params.vectors.size
+                expected_size = settings.QDRANT_VECTOR_SIZE
+                if current_size != expected_size:
+                    print(f"Vector size mismatch for {collection_name}: expected {expected_size}, got {current_size}. Deleting and recreating...")
+                    self.client.delete_collection(collection_name)
+                else:
+                    return True  # Already exists with correct size
+
+            # Create new collection
+            self.client.create_collection(
+                collection_name=collection_name,
+                vectors_config=models.VectorParams(
+                    size=settings.QDRANT_VECTOR_SIZE,
+                    distance=models.Distance.COSINE if settings.QDRANT_DISTANCE_METRIC == "Cosine"
+                           else models.Distance.EUCLID,
+                ),
+                hnsw_config={
+                    "m": 16,
+                    "ef_construct": 100,
+                    "full_scan_threshold": 10000,
+                    "max_indexing_threads": 0,
+                } if settings.QDRANT_ENABLE_HNSW else None,
+            )
+            print(f"Created job collection: {collection_name}")
             return True
         except Exception as e:
             print(f"Error creating job collection: {e}")
@@ -186,22 +197,33 @@ class QdrantVectorClient:
             collections = self.client.get_collections()
             collection_names = [c.name for c in collections.collections]
 
-            if collection_name not in collection_names:
-                self.client.create_collection(
-                    collection_name=collection_name,
-                    vectors_config=models.VectorParams(
-                        size=settings.QDRANT_VECTOR_SIZE,
-                        distance=models.Distance.COSINE if settings.QDRANT_DISTANCE_METRIC == "Cosine"
-                               else models.Distance.EUCLID,
-                    ),
-                    hnsw_config=models.HnswConfig_DIFF(
-                        m=16,
-                        ef_construct=100,
-                        full_scan_threshold=10000,
-                        max_indexing_threads=0,
-                    ) if settings.QDRANT_ENABLE_HNSW else None,
-                )
-                print(f"Created resume collection: {collection_name}")
+            if collection_name in collection_names:
+                # Check vector size
+                info = self.client.get_collection(collection_name)
+                current_size = info.config.params.vectors.size
+                expected_size = settings.QDRANT_VECTOR_SIZE
+                if current_size != expected_size:
+                    print(f"Vector size mismatch for {collection_name}: expected {expected_size}, got {current_size}. Deleting and recreating...")
+                    self.client.delete_collection(collection_name)
+                else:
+                    return True  # Already exists with correct size
+
+            # Create new collection
+            self.client.create_collection(
+                collection_name=collection_name,
+                vectors_config=models.VectorParams(
+                    size=settings.QDRANT_VECTOR_SIZE,
+                    distance=models.Distance.COSINE if settings.QDRANT_DISTANCE_METRIC == "Cosine"
+                           else models.Distance.EUCLID,
+                ),
+                hnsw_config={
+                    "m": 16,
+                    "ef_construct": 100,
+                    "full_scan_threshold": 10000,
+                    "max_indexing_threads": 0,
+                } if settings.QDRANT_ENABLE_HNSW else None,
+            )
+            print(f"Created resume collection: {collection_name}")
             return True
         except Exception as e:
             print(f"Error creating resume collection: {e}")
@@ -336,3 +358,15 @@ async def get_qdrant_client():
     """Dependency to get Qdrant client"""
     await qdrant_client.connect()
     return qdrant_client
+
+
+async def upsert_job_vector(job_id: str, vector: List[float], payload: Dict[str, Any]) -> bool:
+    """Upsert job vector to Qdrant"""
+    await qdrant_client.connect()
+    return await qdrant_client.index_job(job_id, vector, payload)
+
+
+async def delete_job_vector(qdrant_point_id: str) -> bool:
+    """Delete job vector from Qdrant"""
+    await qdrant_client.connect()
+    return await qdrant_client.delete_job(qdrant_point_id)

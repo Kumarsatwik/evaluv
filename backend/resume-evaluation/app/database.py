@@ -17,6 +17,9 @@ async_engine = create_async_engine(
 async def create_db_and_tables():
     """Create database tables"""
     async with async_engine.begin() as conn:
+        # Drop tables in reverse dependency order to avoid FK issues
+        await conn.run_sync(SQLModel.metadata.drop_all)
+        # Create tables
         await conn.run_sync(SQLModel.metadata.create_all)
 
 
