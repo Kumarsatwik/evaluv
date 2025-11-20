@@ -3,24 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from fastapi.openapi.utils import get_openapi
 from contextlib import asynccontextmanager
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
 from .database import create_db_and_tables
 from .config import settings
-from .middleware.auth_middleware import AuthMiddleware, RateLimitMiddleware
+from .middleware.auth_middleware import AuthMiddleware
+from .middleware.rate_limit import RateLimitMiddleware
 from .utils.redis_client import redis_client
 from .utils.qdrant_client import qdrant_client
 from .routes.auth_routes import router as auth_router
 from .routes.user_routes import router as user_router
 from .routes.job_routes import router as job_router
 from datetime import datetime, timezone
-
-# ------------------------------------------
-# Rate Limiter
-# ------------------------------------------
-limiter = Limiter(key_func=get_remote_address)
-
 
 # ------------------------------------------
 # Lifespan
@@ -116,9 +108,7 @@ async def shutdown_event():
     pass
 
 
-# Attach limiter to app
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# Removed - using dedicated rate limiting middleware now
 
 
 # ------------------------------------------

@@ -5,7 +5,20 @@ import redis.asyncio as redis
 import json
 from typing import Optional, Any, Dict
 from contextlib import asynccontextmanager
+from uuid import UUID
+from datetime import datetime, date
 from ..config import settings
+
+
+class CustomJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles UUID and datetime objects"""
+
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            return str(obj)
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        return super().default(obj)
 
 
 class RedisClient:
@@ -58,7 +71,7 @@ class RedisClient:
         ttl = max(1, int(expires_at - time.time()))
 
         # Store with TTL
-        await self.client.setex(key, ttl, json.dumps(data))
+        await self.client.setex(key, ttl, json.dumps(data, cls=CustomJSONEncoder))
         return True
 
     async def is_token_blacklisted(self, jti: str) -> bool:
@@ -83,7 +96,7 @@ class RedisClient:
         }
 
         ttl = expires_in_days * 24 * 60 * 60  # Convert days to seconds
-        await self.client.setex(key, ttl, json.dumps(data))
+        await self.client.setex(key, ttl, json.dumps(data, cls=CustomJSONEncoder))
         return True
 
     async def validate_refresh_token(self, token: str) -> Optional[str]:
@@ -155,6 +168,19 @@ class RedisClient:
             await self.client.setex(key, ttl, value)
         else:
             await self.client.set(key, value)
+        return True
+
+    async def cache_set_json(self, key: str, data: Any, ttl: int = None) -> bool:
+        """Set structured data in cache as JSON with UUID support"""
+        if not self.client:
+            await self.connect()
+
+        json_str = json.dumps(data, cls=CustomJSONEncoder)
+
+        if ttl:
+            await self.client.setex(key, ttl, json_str)
+        else:
+            await self.client.set(key, json_str)
         return True
 
     async def cache_delete(self, key: str) -> bool:

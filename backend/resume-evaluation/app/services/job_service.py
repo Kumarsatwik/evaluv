@@ -43,7 +43,7 @@ class JobService:
         # Cache results
         if jobs:
             jobs_data = [job.model_dump() for job in jobs]
-            await redis_client.cache_set("jobs:all", json.dumps(jobs_data), settings.CACHE_TTL_SECONDS)
+            await redis_client.cache_set_json("jobs:all", jobs_data, settings.CACHE_TTL_SECONDS)
 
         return jobs
 
