@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     REDIS_DECODE_RESPONSES: bool = True
 
     # Security
-    SECRET_KEY: str = "your-secret-key-here"
+    SECRET_KEY: str = "d91uu1NF1R9SnSV8lY6f3OYX1K9r1QpnNJ21Nq4OGdCyva9Aba"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -21,8 +21,8 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
     # Rate Limiting
-    RATE_LIMIT_REQUESTS: int = 100
-    RATE_LIMIT_WINDOW: int = 3600  # 1 hour in seconds
+    RATE_LIMIT_REQUESTS: int = 10
+    RATE_LIMIT_WINDOW: int = 60  # 1 hour in seconds
 
     # Caching
     CACHE_TTL_SECONDS: int = 300  # 5 minutes default cache TTL
@@ -41,8 +41,6 @@ class Settings(BaseSettings):
     OPENAI_EMBEDDING_MODEL: str = "text-embedding-ada-002"
     OPENROUTER_API_KEY: Optional[str] = None
     EMBEDDING_MODEL: str = "qwen/qwen3-embedding-8b"
-    OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_EMBEDDING_MODEL: str = "qwen3-embedding:0.6b"
 
     EMBEDDING_MAX_TOKENS: int = 8191  # Maximum tokens for embeddings
 
