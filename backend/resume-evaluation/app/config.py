@@ -44,6 +44,13 @@ class Settings(BaseSettings):
 
     EMBEDDING_MAX_TOKENS: int = 8191  # Maximum tokens for embeddings
 
+    # AWS
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    AWS_REGION: str = "us-east-1"
+    S3_BUCKET_NAME: str = "resume-uploads"
+    PRESIGNED_URL_EXPIRATION: int = 3600  # 1 hour in seconds
+
     model_config = SettingsConfigDict(env_file=".env")
 
 

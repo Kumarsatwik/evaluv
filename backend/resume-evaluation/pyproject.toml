@@ -27,6 +27,7 @@ dependencies = [
     "uvicorn==0.24.0",
     "psycopg2>=2.9.11",
     "redis>=7.0.1",
+    "boto3==1.35.0",
 ]
 
 [tool.pytest.ini_options]
